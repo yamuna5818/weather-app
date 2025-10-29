@@ -12,8 +12,10 @@ const pPrecipitation = document.querySelector("#pPrecipitation");
 
 let cityName, countryName, weatherData;
 
+txtSearch.value = "Berlin, Germany";
+
 async function getGeoData() {
-  let search = txtSearch.value;
+  let search = txtSearch.value || "Berlin, Germany"; 
 
   const url = `https://nominatim.openstreetmap.org/search?q=${search}&format=jsonv2&addressdetails=1`;
   try {
@@ -36,7 +38,7 @@ async function getGeoData() {
 
 function loadLocationData(locationData) {
   let location = locationData[0].address;
-  cityName = location.city;
+  cityName = location.city || location.town || location.state;
   countryName = location.country_code.toUpperCase();
 
   let dateOptions = {
@@ -47,7 +49,6 @@ function loadLocationData(locationData) {
   };
 
   let currDate = new Intl.DateTimeFormat("en-US", dateOptions).format(new Date());
-
 
   dvCityCountry.textContent = `${cityName}, ${countryName}`;
   dvCurrDate.textContent = currDate;
@@ -119,26 +120,7 @@ function loadDailyForecast() {
 function addDailyElement(tag, className, content, weatherCodeName, parentElement, position) {
   const newElement = document.createElement(tag);
   newElement.setAttribute("class", className);
-  if (content !== "") {
-    const newContent = document.createTextNode(content);
-    newElement.appendChild(newContent);
-  }
-  if (tag === "img") {
-    newElement.setAttribute("src", `/images/icon-${weatherCodeName}.webp`);
-    newElement.setAttribute("alt", weatherCodeName);
-    newElement.setAttribute("width", "320");
-    newElement.setAttribute("height", "320");
-  }
-  parentElement.insertAdjacentElement(position, newElement);
-}
-
-function addHourlyElement(tag, className, content, weatherCodeName, parentElement, position) {
-  const newElement = document.createElement(tag);
-  newElement.setAttribute("class", className);
-  if (content !== "") {
-    const newContent = document.createTextNode(content);
-    newElement.appendChild(newContent);
-  }
+  if (content !== "") newElement.textContent = content;
   if (tag === "img") {
     newElement.setAttribute("src", `/images/icon-${weatherCodeName}.webp`);
     newElement.setAttribute("alt", weatherCodeName);
@@ -149,10 +131,7 @@ function addHourlyElement(tag, className, content, weatherCodeName, parentElemen
 }
 
 function loadHourlyForecast() {
-  console.log("loadHourlyForecast()");
   let dayIndex = parseInt(ddlDay.value, 10);
-
-  console.log(`Day ${dayIndex + 1}`);
   let firstHour = 24 * dayIndex;
   let lastHour = 24 * (dayIndex + 1) - 1;
   let weatherCodes = weatherData.hourly.weather_code;
@@ -170,18 +149,11 @@ function loadHourlyForecast() {
       dvForecastHour.removeChild(dvForecastHour.firstChild);
     }
 
-    
     addDailyElement("img", "hourly__hour-icon", "", weatherCodeName, dvForecastHour, "afterbegin");
     addDailyElement("p", "hourly__hour-time", hour, "", dvForecastHour, "beforeend");
     addDailyElement("p", "hourly__hour-temp", temp, "", dvForecastHour, "beforeend");
 
     id++;
-  }
-}
-
-function getHours() {
-  for (let h = 0; h <= 23; h++) {
-    console.log(h);
   }
 }
 
@@ -222,23 +194,18 @@ function getWeatherCodeName(code) {
 
 function populateDayOfWeek() {
   let currDate = new Date();
-  let currDay;
 
-  for (i = 0; i < 7; i++) {
-    currDay = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(currDate);
+  for (let i = 0; i < 7; i++) {
     const newOption = document.createElement("option");
-    const dayOfWeek = document.createTextNode(currDay);
+    const dayOfWeek = new Intl.DateTimeFormat("en-US", { weekday: "long" }).format(currDate);
 
     newOption.setAttribute("class", "hourly__select-day");
     newOption.setAttribute("value", i);
-    newOption.appendChild(dayOfWeek);
+    newOption.textContent = dayOfWeek;
 
     ddlDay.insertAdjacentElement("beforeend", newOption);
-
     currDate.setDate(currDate.getDate() + 1);
   }
-
-  console.log(ddlDay);
 }
 
 populateDayOfWeek();
